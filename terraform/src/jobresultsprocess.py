@@ -1,9 +1,7 @@
 import json
 import logging
-import os
 import time
 
-import datastore
 from helper import AwsHelper
 from og import OutputGenerator
 
@@ -58,8 +56,6 @@ def processRequest(request):
     jobAPI = request['jobAPI']
     bucketName = request['bucketName']
     objectName = request['objectName']
-    outputTable = request["outputTable"]
-    documentsTable = request["documentsTable"]
 
     if jobStatus != "SUCCEEDED":
         raise Exception("JobStatus is not successful: {}".format(jobStatus))
@@ -79,9 +75,6 @@ def processRequest(request):
     opg.run()
 
     print("DocumentId: {}".format(jobTag))
-
-    # ds = datastore.DocumentStore(documentsTable, outputTable)
-    # ds.markDocumentComplete(jobTag)
 
     output = "Processed -> Document: {}, Object: {}/{} processed.".format(
         jobTag, bucketName, objectName)
@@ -106,8 +99,6 @@ def lambda_handler(event, context):
         "jobAPI": message['API'],
         "bucketName": message['DocumentLocation']['S3Bucket'],
         "objectName": message['DocumentLocation']['S3ObjectName'],
-        "outputTable": os.environ['OUTPUT_TABLE'],
-        "documentsTable": os.environ['DOCUMENTS_TABLE'],
     }
 
     return processRequest(request)
