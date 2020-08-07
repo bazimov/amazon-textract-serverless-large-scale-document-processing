@@ -10,7 +10,6 @@ logging.getLogger().setLevel(logging.INFO)
 
 def start_job(bucket_name, object_name, document_id, sns_topic, sns_role,
               detect_forms, detect_tables):
-    response = dict()
     logging.info(
         "Starting job with documentId: %s, bucketName: %s, objectName: %s",
         document_id, bucket_name, object_name)
@@ -37,26 +36,24 @@ def start_job(bucket_name, object_name, document_id, sns_topic, sns_role,
             features.append("TABLES")
         if detect_forms:
             features.append("FORMS")
-        logging.info(
-            "Starting StartDocumentAnalysis api call with features: %s",
-            features)
-        try:
-            response = client.start_document_analysis(
-                ClientRequestToken=document_id,
-                DocumentLocation={
-                    'S3Object': {
-                        'Bucket': bucket_name,
-                        'Name': object_name
-                    }
-                },
-                FeatureTypes=features,
-                NotificationChannel={
-                    "RoleArn": sns_role,
-                    "SNSTopicArn": sns_topic
-                },
-                JobTag=document_id)
-        except Exception as error:
-            logging.error(error)
+        logging.info("Starting StartDocumentAnalysis: %s, %s, %s, %s, %s, %s",
+                     features, document_id, bucket_name, object_name, sns_role,
+                     sns_topic)
+
+        response = client.start_document_analysis(
+            ClientRequestToken=document_id,
+            DocumentLocation={
+                'S3Object': {
+                    'Bucket': bucket_name,
+                    'Name': object_name
+                }
+            },
+            FeatureTypes=features,
+            NotificationChannel={
+                "RoleArn": sns_role,
+                "SNSTopicArn": sns_topic
+            },
+            JobTag=document_id)
 
     return response.get("JobId")
 
@@ -64,22 +61,17 @@ def start_job(bucket_name, object_name, document_id, sns_topic, sns_role,
 def process_item(message, snsTopic, snsRole):
 
     logging.debug("Message: %s", message)
-
     message_body = json.loads(message['Body'])
 
     bucket_name = message_body['Records'][0]['s3']['bucket']['name']
     object_name = message_body['Records'][0]['s3']['object']['key']
-    document_id = message_body['Records'][0]['s3']['object']['eTag']
-    # features = message_body['features']
-    # detect_forms = 'Forms' in features
-    # detect_tables = 'Tables' in features
-    detect_forms = True
-    detect_tables = True
+    document_id = message['MessageId']
+    detect_forms = True  # hardcoded bool value
+    detect_tables = True  # hardcoded bool value
 
     logging.info('Bucket Name: %s', bucket_name)
     logging.info('Object Name: %s', object_name)
     logging.info('Task ID: %s', document_id)
-    # print("API: {}".format(features))
 
     logging.info('starting Textract job...')
 
@@ -117,7 +109,8 @@ def get_messages_from_queue(sqs, q_url):
         return response['Messages']
     else:
         logging.info("No messages in the queue.")
-        logging.debug("No messages in the queue. because response is %s", response)
+        logging.debug("No messages in the queue. because response is %s",
+                      response)
         return None
 
 
