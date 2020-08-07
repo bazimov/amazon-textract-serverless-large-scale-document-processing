@@ -89,8 +89,7 @@ resource "aws_lambda_function" "textract_results_lambda" {
 
   environment {
     variables = {
-      OUTPUT_TABLE    = aws_dynamodb_table.textract_outputs_table.arn
-      DOCUMENTS_TABLE = aws_dynamodb_table.textract_documents_table.arn
+      S3_KMS_KEY    = aws_kms_key.textract_s3_key.arn
     }
   }
   tags = local.default_tags
