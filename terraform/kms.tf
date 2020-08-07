@@ -1,7 +1,7 @@
 # TODO: create separate key for each service and use dedicated kms key policies.
 resource "aws_kms_key" "textract_sqs" {
   description = "This key is used to encrypt data of textract pipeline services"
-  #policy = data.aws_iam_policy_document.sqs_key_policy.json
+  # policy = data.aws_iam_policy_document.sqs_key_policy.json
   deletion_window_in_days = 30
   tags                    = local.default_tags
 }
