@@ -32,8 +32,7 @@ class DocumentStore:
                 })
         except ClientError as e:
             print(e)
-            if e.response['Error'][
-                    'Code'] == "ConditionalCheckFailedException":
+            if e.response['Error']['Code'] == "ConditionalCheckFailedException":
                 print(e.response['Error']['Message'])
                 err = {'Error': 'Document already exist.'}
             else:
@@ -49,16 +48,12 @@ class DocumentStore:
         table = dynamodb.Table(self._documentsTableName)
 
         try:
-            table.update_item(
-                Key={'documentId': documentId},
-                UpdateExpression='SET documentStatus= :documentstatusValue',
-                ConditionExpression='attribute_exists(documentId)',
-                ExpressionAttributeValues={
-                    ':documentstatusValue': documentStatus
-                })
+            table.update_item(Key={'documentId': documentId},
+                              UpdateExpression='SET documentStatus= :documentstatusValue',
+                              ConditionExpression='attribute_exists(documentId)',
+                              ExpressionAttributeValues={':documentstatusValue': documentStatus})
         except ClientError as e:
-            if e.response['Error'][
-                    'Code'] == "ConditionalCheckFailedException":
+            if e.response['Error']['Code'] == "ConditionalCheckFailedException":
                 print(e.response['Error']['Message'])
                 err = {'Error': 'Document does not exist.'}
             else:
@@ -81,12 +76,10 @@ class DocumentStore:
                 ConditionExpression='attribute_exists(documentId)',
                 ExpressionAttributeValues={
                     ':documentstatusValue': "SUCCEEDED",
-                    ':documentCompletedOnValue':
-                    str(datetime.datetime.utcnow())
+                    ':documentCompletedOnValue': str(datetime.datetime.utcnow())
                 })
         except ClientError as e:
-            if e.response['Error'][
-                    'Code'] == "ConditionalCheckFailedException":
+            if e.response['Error']['Code'] == "ConditionalCheckFailedException":
                 print(e.response['Error']['Message'])
                 err = {'Error': 'Document does not exist.'}
             else:
@@ -98,11 +91,10 @@ class DocumentStore:
 
         dynamodb = AwsHelper().getClient("dynamodb")
 
-        ddbGetItemResponse = dynamodb.get_item(
-            Key={'documentId': {
-                'S': documentId
-            }},
-            TableName=self._documentsTableName)
+        ddbGetItemResponse = dynamodb.get_item(Key={'documentId': {
+            'S': documentId
+        }},
+                                               TableName=self._documentsTableName)
 
         itemToReturn = None
 
@@ -111,8 +103,7 @@ class DocumentStore:
                 'documentId': ddbGetItemResponse['Item']['documentId']['S'],
                 'bucketName': ddbGetItemResponse['Item']['bucketName']['S'],
                 'objectName': ddbGetItemResponse['Item']['objectName']['S'],
-                'documentStatus':
-                ddbGetItemResponse['Item']['documentStatus']['S']
+                'documentStatus': ddbGetItemResponse['Item']['documentStatus']['S']
             }
 
         return itemToReturn
@@ -132,8 +123,7 @@ class DocumentStore:
         pageSize = 25
 
         if (nextToken):
-            response = table.scan(ExclusiveStartKey={"documentId": nextToken},
-                                  Limit=pageSize)
+            response = table.scan(ExclusiveStartKey={"documentId": nextToken}, Limit=pageSize)
         else:
             response = table.scan(Limit=pageSize)
 

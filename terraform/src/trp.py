@@ -9,8 +9,7 @@ class BoundingBox:
         self._top = top
 
     def __str__(self):
-        return "width: {}, height: {}, left: {}, top: {}".format(
-            self._width, self._height, self._left, self._top)
+        return "width: {}, height: {}, left: {}, top: {}".format(self._width, self._height, self._left, self._top)
 
     @property
     def width(self):
@@ -50,8 +49,7 @@ class Geometry:
     def __init__(self, geometry):
         boundingBox = geometry["BoundingBox"]
         polygon = geometry["Polygon"]
-        bb = BoundingBox(boundingBox["Width"], boundingBox["Height"],
-                         boundingBox["Left"], boundingBox["Top"])
+        bb = BoundingBox(boundingBox["Width"], boundingBox["Height"], boundingBox["Left"], boundingBox["Top"])
         pgs = []
         for pg in polygon:
             pgs.append(Polygon(pg["X"], pg["Y"]))
@@ -300,8 +298,7 @@ class Field:
                         if ('Relationships' in vkvs):
                             for vitem in vkvs['Relationships']:
                                 if (vitem["Type"] == "CHILD"):
-                                    self._value = FieldValue(
-                                        vkvs, vitem['Ids'], blockMap)
+                                    self._value = FieldValue(vkvs, vitem['Ids'], blockMap)
 
     def __str__(self):
         s = "\nField\n==========\n"
@@ -535,9 +532,7 @@ class Page:
                         self._form.addField(f)
                         self._content.append(f)
                     else:
-                        print(
-                            "WARNING: Detected K/V where key does not have content. Excluding key from output."
-                        )
+                        print("WARNING: Detected K/V where key does not have content. Excluding key from output.")
                         print(f)
                         print(item)
 
@@ -551,20 +546,16 @@ class Page:
                 bbox_right = item.geometry.boundingBox.left + item.geometry.boundingBox.width
                 bbox_centre = item.geometry.boundingBox.left + item.geometry.boundingBox.width / 2
                 column_centre = column['left'] + column['right'] / 2
-                if (bbox_centre > column['left'] and bbox_centre <
-                        column['right']) or (column_centre > bbox_left
-                                             and column_centre < bbox_right):
+                if (bbox_centre > column['left'] and bbox_centre < column['right']) or (column_centre > bbox_left
+                                                                                        and column_centre < bbox_right):
                     #Bbox appears inside the column
                     lines.append([index, item.text])
                     column_found = True
                     break
             if not column_found:
                 columns.append({
-                    'left':
-                    item.geometry.boundingBox.left,
-                    'right':
-                    item.geometry.boundingBox.left +
-                    item.geometry.boundingBox.width
+                    'left': item.geometry.boundingBox.left,
+                    'right': item.geometry.boundingBox.left + item.geometry.boundingBox.width
                 })
                 lines.append([len(columns) - 1, item.text])
 
@@ -654,8 +645,7 @@ class Document:
 
     def _parse(self):
 
-        self._responseDocumentPages, self._blockMap = self._parseDocumentPagesAndBlockMap(
-        )
+        self._responseDocumentPages, self._blockMap = self._parseDocumentPagesAndBlockMap()
         for documentPage in self._responseDocumentPages:
             page = Page(documentPage["Blocks"], self._blockMap)
             self._pages.append(page)

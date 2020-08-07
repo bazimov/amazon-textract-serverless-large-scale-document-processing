@@ -1,3 +1,4 @@
+"""Lambda handler for job results process."""
 import json
 import logging
 import time
@@ -8,89 +9,106 @@ from og import OutputGenerator
 logging.getLogger().setLevel(logging.INFO)
 
 
-def getJobResults(api, jobId):
+def get_job_results(api, job_id):
+    """
+    Get job results from textract.
+    """
     pages = []
 
     time.sleep(5)
 
     client = AwsHelper().getClient('textract')
     if api == "StartDocumentTextDetection":
-        response = client.get_document_text_detection(JobId=jobId)
+        response = client.get_document_text_detection(JobId=job_id)
     else:
-        response = client.get_document_analysis(JobId=jobId)
+        response = client.get_document_analysis(JobId=job_id)
     pages.append(response)
-    print("Resultset page recieved: {}".format(len(pages)))
-    nextToken = None
+    logging.info("Result set page recieved: %s", len(pages))
+    next_token = None
     if 'NextToken' in response:
-        nextToken = response['NextToken']
-        print("Next token: {}".format(nextToken))
+        next_token = response['NextToken']
+        logging.info("Next token: %s", next_token)
 
-    while nextToken:
+    while next_token:
         time.sleep(5)
 
         if api == "StartDocumentTextDetection":
-            response = client.get_document_text_detection(JobId=jobId,
-                                                          NextToken=nextToken)
+            response = client.get_document_text_detection(
+                JobId=job_id,
+                NextToken=next_token,
+            )
         else:
-            response = client.get_document_analysis(JobId=jobId,
-                                                    NextToken=nextToken)
+            response = client.get_document_analysis(
+                JobId=job_id,
+                NextToken=next_token,
+            )
 
         pages.append(response)
-        print("Resultset page recieved: {}".format(len(pages)))
-        nextToken = None
+        logging.info("Resultset page recieved: %s", len(pages))
+        next_token = None
         if 'NextToken' in response:
-            nextToken = response['NextToken']
-            print("Next token: {}".format(nextToken))
+            next_token = response['NextToken']
+            logging.info("Next token: %s", next_token)
 
     return pages
 
 
-def processRequest(request):
-    output = ""
+def process_request(request):
+    """Process results."""
+    logging.debug("Request to process: %s", request)
 
-    print(request)
+    job_id = request['jobId']
+    job_tag = request['jobTag']
+    job_status = request['jobStatus']
+    job_api = request['jobAPI']
+    bucket_name = request['bucketName']
+    object_name = request['objectName']
 
-    jobId = request['jobId']
-    jobTag = request['jobTag']
-    jobStatus = request['jobStatus']
-    jobAPI = request['jobAPI']
-    bucketName = request['bucketName']
-    objectName = request['objectName']
+    if job_status != "SUCCEEDED":
+        raise Exception("JobStatus is not successful: {}".format(job_status))
 
-    if jobStatus != "SUCCEEDED":
-        raise Exception("JobStatus is not successful: {}".format(jobStatus))
+    pages = get_job_results(job_api, job_id)
 
-    pages = getJobResults(jobAPI, jobId)
+    logging.info("Result pages recieved: %s", len(pages))
 
-    print("Result pages recieved: {}".format(len(pages)))
+    detect_forms = False
+    detect_tables = False
+    if job_api == "StartDocumentAnalysis":
+        detect_forms = True
+        detect_tables = True
 
-    detectForms = False
-    detectTables = False
-    if jobAPI == "StartDocumentAnalysis":
-        detectForms = True
-        detectTables = True
-
-    opg = OutputGenerator(jobTag, pages, bucketName, objectName, detectForms,
-                          detectTables)
+    opg = OutputGenerator(
+        job_tag,
+        pages,
+        bucket_name,
+        object_name,
+        detect_forms,
+        detect_tables,
+    )
     opg.run()
 
-    print("DocumentId: {}".format(jobTag))
+    logging.info("DocumentId: %s", job_tag)
 
     output = "Processed -> Document: {}, Object: {}/{} processed.".format(
-        jobTag, bucketName, objectName)
+        job_tag,
+        bucket_name,
+        object_name,
+    )
 
-    print(output)
+    logging.info(output)
 
     return {'statusCode': 200, 'body': output}
 
 
 def lambda_handler(event, context):
-    print("event: {}".format(event))
+    """Handler entrypoint."""
+    logging.debug("Event: %s", event)
+    logging.debug("Context: %s", context)
 
     body = json.loads(event['Records'][0]['body'])
     message = json.loads(body['Message'])
 
-    print("Message: {}".format(message))
+    logging.info("Message: %s", message)
 
     request = {
         "jobId": message['JobId'],
@@ -101,9 +119,4 @@ def lambda_handler(event, context):
         "objectName": message['DocumentLocation']['S3ObjectName'],
     }
 
-    return processRequest(request)
-
-
-def lambda_handler_local(event, context):
-    print("event: {}".format(event))
-    return processRequest(event)
+    return process_request(request)

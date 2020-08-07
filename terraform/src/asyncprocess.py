@@ -1,3 +1,4 @@
+"""Start Async textract process."""
 import json
 import logging
 import os
@@ -8,23 +9,23 @@ import boto3
 logging.getLogger().setLevel(logging.INFO)
 
 
-def start_job(bucket_name, object_name, document_id, sns_topic, sns_role,
-              detect_forms, detect_tables):
+def start_job(bucket_name, object_name, document_id, sns_topic, sns_role, detect_forms, detect_tables):
     logging.info(
         "Starting job with documentId: %s, bucketName: %s, objectName: %s",
-        document_id, bucket_name, object_name)
+        document_id,
+        bucket_name,
+        object_name,
+    )
 
     client = boto3.client('textract')
     if not detect_forms and not detect_tables:
         logging.info("Starting StartDocumentTectDetection api call.")
         response = client.start_document_text_detection(
             ClientRequestToken=document_id,
-            DocumentLocation={
-                'S3Object': {
-                    'Bucket': bucket_name,
-                    'Name': object_name
-                }
-            },
+            DocumentLocation={'S3Object': {
+                'Bucket': bucket_name,
+                'Name': object_name
+            }},
             NotificationChannel={
                 "RoleArn": sns_role,
                 "SNSTopicArn": sns_topic
@@ -36,18 +37,23 @@ def start_job(bucket_name, object_name, document_id, sns_topic, sns_role,
             features.append("TABLES")
         if detect_forms:
             features.append("FORMS")
-        logging.info("Starting StartDocumentAnalysis: %s, %s, %s, %s, %s, %s",
-                     features, document_id, bucket_name, object_name, sns_role,
-                     sns_topic)
+        logging.debug(
+            "Starting StartDocumentAnalysis: %s, %s, %s, %s, %s, %s",
+            features,
+            document_id,
+            bucket_name,
+            object_name,
+            sns_role,
+            sns_topic,
+        )
+        logging.info("Starting StartDocumentAnalysis")
 
         response = client.start_document_analysis(
             ClientRequestToken=document_id,
-            DocumentLocation={
-                'S3Object': {
-                    'Bucket': bucket_name,
-                    'Name': object_name
-                }
-            },
+            DocumentLocation={'S3Object': {
+                'Bucket': bucket_name,
+                'Name': object_name
+            }},
             FeatureTypes=features,
             NotificationChannel={
                 "RoleArn": sns_role,
@@ -58,7 +64,7 @@ def start_job(bucket_name, object_name, document_id, sns_topic, sns_role,
     return response.get("JobId")
 
 
-def process_item(message, snsTopic, snsRole):
+def process_item(message, sns_topic, sns_role):
 
     logging.debug("Message: %s", message)
     message_body = json.loads(message['Body'])
@@ -73,10 +79,9 @@ def process_item(message, snsTopic, snsRole):
     logging.info('Object Name: %s', object_name)
     logging.info('Task ID: %s', document_id)
 
-    logging.info('starting Textract job...')
+    logging.info('Starting Textract job...')
 
-    job_id = start_job(bucket_name, object_name, document_id, snsTopic,
-                       snsRole, detect_forms, detect_tables)
+    job_id = start_job(bucket_name, object_name, document_id, sns_topic, sns_role, detect_forms, detect_tables)
 
     if job_id:
         logging.info("Started Job with Id: %s", job_id)
@@ -86,20 +91,25 @@ def process_item(message, snsTopic, snsRole):
 
 def change_visibility(sqs, q_url, receipt_handle):
     try:
-        sqs.change_message_visibility(QueueUrl=q_url,
-                                      ReceiptHandle=receipt_handle,
-                                      VisibilityTimeout=0)
+        sqs.change_message_visibility(
+            QueueUrl=q_url,
+            ReceiptHandle=receipt_handle,
+            VisibilityTimeout=0,
+        )
     except Exception as error:
-        logging.error("Failed to change visibility for %s with error: %s",
-                      receipt_handle, error)
+        logging.error(
+            "Failed to change visibility for %s with error: %s",
+            receipt_handle,
+            error,
+        )
 
 
 def get_messages_from_queue(sqs, q_url):
-    # Receive message from SQS queue
+    """Get events from SQS that came from S3 Event."""
     response = sqs.receive_message(
         QueueUrl=q_url,
         MaxNumberOfMessages=1,
-        VisibilityTimeout=60  # 14400
+        VisibilityTimeout=60,  # 14400
     )
 
     logging.debug('SQS Response Recieved: %s', response)
@@ -109,13 +119,12 @@ def get_messages_from_queue(sqs, q_url):
         return response['Messages']
     else:
         logging.info("No messages in the queue.")
-        logging.debug("No messages in the queue. because response is %s",
-                      response)
+        logging.debug("No messages in the queue. because response is %s", response)
         return None
 
 
 def process_items(q_url, sns_topic, sns_role):
-
+    """Process items from the SQS."""
     sqs = boto3.client('sqs')
     messages = get_messages_from_queue(sqs, q_url)
     logging.debug("Messages from the queue: %s", messages)
@@ -141,18 +150,14 @@ def process_items(q_url, sns_topic, sns_role):
                     logging.info("started job...")
                     logging.info('Deleting item from queue...')
                     # Delete received message from queue
-                    sqs.delete_message(QueueUrl=q_url,
-                                       ReceiptHandle=receipt_handle)
+                    sqs.delete_message(QueueUrl=q_url, ReceiptHandle=receipt_handle)
                     logging.info('Deleted item from queue...')
                     jc += 1
             except Exception as error:
-                logging.error(
-                    "Error while starting job or deleting from queue: %s",
-                    error)
+                logging.error("Error while starting job or deleting from queue: %s", error)
                 change_visibility(sqs, q_url, receipt_handle)
                 if (error.__class__.__name__ == 'LimitExceededException'
-                        or error.__class__.__name__
-                        == "ProvisionedThroughputExceededException"):
+                        or error.__class__.__name__ == "ProvisionedThroughputExceededException"):
                     hit_limit = True
                     limit_exception = error
 
@@ -163,7 +168,7 @@ def process_items(q_url, sns_topic, sns_role):
 
 
 def process_request(request):
-
+    """Process async request."""
     q_url = request['q_url']
     sns_topic = request['sns_topic']
     sns_role = request['sns_role']
@@ -212,7 +217,7 @@ def process_request(request):
 
 
 def lambda_handler(event, context):
-
+    """Lambda handler entrypoint."""
     logging.debug("Event: %s", event)
     logging.debug("Context: %s", context)
 

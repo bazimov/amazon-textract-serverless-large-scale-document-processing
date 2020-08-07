@@ -73,11 +73,7 @@ class S3Helper:
         return awsRegion
 
     @staticmethod
-    def getFileNames(bucketName,
-                     prefix,
-                     maxPages,
-                     allowedFileTypes,
-                     awsRegion=None):
+    def getFileNames(bucketName, prefix, maxPages, allowedFileTypes, awsRegion=None):
 
         files = []
 
@@ -89,17 +85,14 @@ class S3Helper:
 
         while (hasMoreContent and currentPage <= maxPages):
             if (continuationToken):
-                listObjectsResponse = s3client.list_objects_v2(
-                    Bucket=bucketName,
-                    Prefix=prefix,
-                    ContinuationToken=continuationToken)
+                listObjectsResponse = s3client.list_objects_v2(Bucket=bucketName,
+                                                               Prefix=prefix,
+                                                               ContinuationToken=continuationToken)
             else:
-                listObjectsResponse = s3client.list_objects_v2(
-                    Bucket=bucketName, Prefix=prefix)
+                listObjectsResponse = s3client.list_objects_v2(Bucket=bucketName, Prefix=prefix)
 
             if (listObjectsResponse['IsTruncated']):
-                continuationToken = listObjectsResponse[
-                    'NextContinuationToken']
+                continuationToken = listObjectsResponse['NextContinuationToken']
             else:
                 hasMoreContent = False
 

@@ -5,14 +5,7 @@ from trp import Document
 
 
 class OutputGenerator:
-    def __init__(self,
-                 documentId,
-                 response,
-                 bucketName,
-                 objectName,
-                 forms,
-                 tables,
-                 ddb=None):
+    def __init__(self, documentId, response, bucketName, objectName, forms, tables, ddb=None):
         self.documentId = documentId
         self.response = response
         self.bucketName = bucketName
