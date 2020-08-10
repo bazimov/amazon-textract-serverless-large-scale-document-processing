@@ -17,7 +17,7 @@ def get_job_results(api, job_id):
 
     time.sleep(5)
 
-    client = AwsHelper().getClient('textract')
+    client = AwsHelper().get_client('textract')
     if api == "StartDocumentTextDetection":
         response = client.get_document_text_detection(JobId=job_id)
     else:

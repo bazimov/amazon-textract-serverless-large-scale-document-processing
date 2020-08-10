@@ -5,95 +5,101 @@ from trp import Document
 
 
 class OutputGenerator:
-    def __init__(self, documentId, response, bucketName, objectName, forms, tables, ddb=None):
-        self.documentId = documentId
+    """
+    Output generator
+    """
+
+    def __init__(self, document_id, response, bucket_name, object_name, forms, tables, ddb=None):
+        self.document_id = document_id
         self.response = response
-        self.bucketName = bucketName
-        self.objectName = objectName
+        self.bucket_name = bucket_name
+        self.object_name = object_name
         self.forms = forms
         self.tables = tables
-
-        self.outputPath = "{}-analysis/{}/".format(objectName, documentId)
+        self.ddb = ddb
+        self.output_path = "{}-analysis/{}/".format(object_name, document_id)
 
         self.document = Document(self.response)
 
-    def _outputText(self, page, p):
+    def _output_text(self, page, p):
         text = page.text
-        opath = "{}page-{}-text.txt".format(self.outputPath, p)
-        S3Helper.writeToS3(text, self.bucketName, opath)
+        opath = "{}page-{}-text.txt".format(self.output_path, p)
+        S3Helper.write_to_s3(text, self.bucket_name, opath)
         # self.saveItem(self.documentId, "page-{}-Text".format(p), opath)
 
-        textInReadingOrder = page.getTextInReadingOrder()
-        opath = "{}page-{}-text-inreadingorder.txt".format(self.outputPath, p)
-        S3Helper.writeToS3(textInReadingOrder, self.bucketName, opath)
+        text_in_reading_order = page.getTextInReadingOrder()
+        opath = "{}page-{}-text-inreadingorder.txt".format(self.output_path, p)
+        S3Helper.write_to_s3(text_in_reading_order, self.bucket_name, opath)
         # self.saveItem(self.documentId, "page-{}-TextInReadingOrder".format(p),
         #              opath)
 
-    def _outputForm(self, page, p):
-        csvData = []
+    def _output_form(self, page, p):
+        csv_data = []
         for field in page.form.fields:
-            csvItem = []
-            if (field.key):
-                csvItem.append(field.key.text)
+            csv_item = []
+            if field.key:
+                csv_item.append(field.key.text)
             else:
-                csvItem.append("")
-            if (field.value):
-                csvItem.append(field.value.text)
+                csv_item.append("")
+            if field.value:
+                csv_item.append(field.value.text)
             else:
-                csvItem.append("")
-            csvData.append(csvItem)
-        csvFieldNames = ['Key', 'Value']
-        opath = "{}page-{}-forms.csv".format(self.outputPath, p)
-        S3Helper.writeCSV(csvFieldNames, csvData, self.bucketName, opath)
+                csv_item.append("")
+            csv_data.append(csv_item)
+        csv_field_names = ['Key', 'Value']
+        opath = "{}page-{}-forms.csv".format(self.output_path, p)
+        S3Helper.write_csv(csv_field_names, csv_data, self.bucket_name, opath)
         # self.saveItem(self.documentId, "page-{}-Forms".format(p), opath)
 
-    def _outputTable(self, page, p):
+    def _output_table(self, page, p):
 
-        csvData = []
+        csv_data = []
         for table in page.tables:
-            csvRow = []
-            csvRow.append("Table")
-            csvData.append(csvRow)
+            csv_row = ["Table"]
+            csv_data.append(csv_row)
             for row in table.rows:
-                csvRow = []
+                csv_row = []
                 for cell in row.cells:
-                    csvRow.append(cell.text)
-                csvData.append(csvRow)
-            csvData.append([])
-            csvData.append([])
+                    csv_row.append(cell.text)
+                csv_data.append(csv_row)
+            csv_data.append([])
+            csv_data.append([])
 
-        opath = "{}page-{}-tables.csv".format(self.outputPath, p)
-        S3Helper.writeCSVRaw(csvData, self.bucketName, opath)
+        opath = "{}page-{}-tables.csv".format(self.output_path, p)
+        S3Helper.write_csv_raw(csv_data, self.bucket_name, opath)
         # self.saveItem(self.documentId, "page-{}-Tables".format(p), opath)
 
     def run(self):
+        """
 
-        if (not self.document.pages):
+        :return:
+        """
+        if not self.document.pages:
             return
 
-        opath = "{}response.json".format(self.outputPath)
-        S3Helper.writeToS3(json.dumps(self.response), self.bucketName, opath)
+        output_path = "{}response.json".format(self.output_path)
+        S3Helper.write_to_s3(json.dumps(self.response), self.bucket_name, output_path)
         # self.saveItem(self.documentId, 'Response', opath)
 
         print("Total Pages in Document: {}".format(len(self.document.pages)))
 
-        docText = ""
+        doc_text = ""
 
         p = 1
         for page in self.document.pages:
 
-            opath = "{}page-{}-response.json".format(self.outputPath, p)
-            S3Helper.writeToS3(json.dumps(page.blocks), self.bucketName, opath)
+            output_path = "{}page-{}-response.json".format(self.output_path, p)
+            S3Helper.write_to_s3(json.dumps(page.blocks), self.bucket_name, output_path)
             # self.saveItem(self.documentId, "page-{}-Response".format(p), opath)
 
-            self._outputText(page, p)
+            self._output_text(page, p)
 
-            docText = docText + page.text + "\n"
+            doc_text = doc_text + page.text + "\n"
 
-            if (self.forms):
-                self._outputForm(page, p)
+            if self.forms:
+                self._output_form(page, p)
 
-            if (self.tables):
-                self._outputTable(page, p)
+            if self.tables:
+                self._output_table(page, p)
 
-            p = p + 1
+            p += 1
