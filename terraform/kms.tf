@@ -1,4 +1,3 @@
-# TODO: create separate key for each service and use dedicated kms key policies.
 data "aws_iam_policy_document" "kms_shared_policy" {
   statement {
     sid    = "SQSAllowRootPolicy"
@@ -18,7 +17,7 @@ data "aws_iam_policy_document" "kms_shared_policy" {
     effect = "Allow"
     principals {
       identifiers = [
-        # aws_iam_role.kms_key_admin_role.arn,
+        aws_iam_role.kms_key_admin_role.arn,
         data.aws_caller_identity.current.user_id,
       ]
       type = "AWS"
@@ -109,8 +108,8 @@ data "aws_iam_policy_document" "sns_key_policy" {
     resources = ["*"]
     principals {
       identifiers = [
-        "sns.amazonaws.com",
         "sqs.amazonaws.com",
+        "sns.amazonaws.com",
       ]
       type = "Service"
     }
@@ -130,7 +129,7 @@ data "aws_iam_policy_document" "sns_key_policy" {
       "kms:GenerateDataKey*",
       "kms:List*",
       "kms:DescribeKey",
-      "kms:*", # TODO: remove this debug
+      "kms:CreateGrant",
     ]
     resources = ["*"]
     principals {

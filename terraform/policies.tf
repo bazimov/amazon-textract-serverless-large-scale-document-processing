@@ -49,6 +49,7 @@ data "aws_iam_policy_document" "textract_results_sns_policy" {
     sid    = "KMSPolicy"
     effect = "Allow"
     actions = [
+      "kms:CreateGrant",
       "kms:Encrypt",
       "kms:Decrypt",
       "kms:DescribeKey",
@@ -154,5 +155,21 @@ data "aws_iam_policy_document" "stream_policy_document" {
       aws_sqs_queue.textract_processor_queue.arn,
       aws_sqs_queue.textract_results_queue.arn,
     ]
+  }
+}
+
+data "aws_iam_policy_document" "kms_key_admin_assume_policy" {
+  statement {
+    effect  = "Allow"
+    actions = ["sts:AssumeRole"]
+    principals {
+      identifiers = ["arn:aws:iam::${data.aws_caller_identity.current.account_id}:root"]
+      type        = "AWS"
+    }
+    condition {
+      test     = "StringEquals"
+      values   = [md5("external id")]
+      variable = "sts:ExternalId"
+    }
   }
 }

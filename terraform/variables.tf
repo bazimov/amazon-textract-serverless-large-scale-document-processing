@@ -17,3 +17,11 @@ variable "textract_processor_sqs_name_prefix" {
 variable "textract_results_sqs_name_prefix" {
   default = "textract-results-queue"
 }
+
+variable "lambda_role_name" {
+  default = "textract-processor-lambda-role"
+}
+
+variable "textract_results_role_name" {
+  default = "textract-results-publisher-role"
+}
