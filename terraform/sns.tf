@@ -1,7 +1,7 @@
 resource "aws_sns_topic" "textract_results" {
-  name_prefix       = var.textract_results_sns_name_prefix
+  name_prefix       = local.results_sns_topic_name
   kms_master_key_id = aws_kms_key.textract_sns_key.key_id
-  policy            = ""
+  policy            = data.aws_iam_policy_document.sns_access_policy.json
   tags              = local.default_tags
 }
 
@@ -27,11 +27,13 @@ data "aws_iam_policy_document" "sns_access_policy" {
       "SNS:Receive",
     ]
     principals {
-      identifiers = [aws_iam_role.iam_for_textract_results_publisher.arn]
-      type        = "AWS"
+      identifiers = [
+        aws_iam_role.iam_for_textract_results_publisher.arn,
+      ]
+      type = "AWS"
     }
     resources = [
-      aws_sns_topic.textract_results.arn,
+      "arn:aws:sns:us-east-1:${data.aws_caller_identity.current.account_id}:${local.results_sns_topic_name}",
     ]
   }
 }
