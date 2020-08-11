@@ -23,7 +23,7 @@ data "aws_iam_policy_document" "s3_source_bucket_policy" {
 data "aws_iam_policy_document" "textract_processor_lambda" {
   statement {
     actions = [
-      "sts:AssumeRole"
+      "sts:AssumeRole",
     ]
     principals {
       identifiers = ["lambda.amazonaws.com"]
@@ -35,7 +35,7 @@ data "aws_iam_policy_document" "textract_processor_lambda" {
 data "aws_iam_policy_document" "textract_results_assume_policy" {
   statement {
     actions = [
-      "sts:AssumeRole"
+      "sts:AssumeRole",
     ]
     principals {
       identifiers = ["textract.amazonaws.com"]
@@ -49,15 +49,15 @@ data "aws_iam_policy_document" "textract_results_sns_policy" {
     sid    = "KMSPolicy"
     effect = "Allow"
     actions = [
-      "kms:CreateGrant",
       "kms:Encrypt",
       "kms:Decrypt",
       "kms:DescribeKey",
+      "kms:GenerateDataKey*",
       "kms:ListAliases",
       "kms:ListKeys",
     ]
     resources = [
-      aws_kms_key.textract_s3_key.arn,
+      aws_kms_key.textract_sns_key.arn,
     ]
   }
 
@@ -107,10 +107,10 @@ data "aws_iam_policy_document" "lambda_shared_policy" {
     sid    = "KMSPolicy"
     effect = "Allow"
     actions = [
-      "kms:CreateGrant",
       "kms:Encrypt",
       "kms:Decrypt",
       "kms:DescribeKey",
+      "kms:GenerateDataKey*",
       "kms:ListAliases",
       "kms:ListKeys",
     ]

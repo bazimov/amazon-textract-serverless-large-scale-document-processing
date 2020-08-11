@@ -1,8 +1,8 @@
 resource "aws_s3_bucket" "textract_source_bucket" {
   bucket = local.source_bucket_name
-  # policy = data.aws_iam_policy_document.s3_source_bucket_policy.json
+  policy = data.aws_iam_policy_document.s3_source_bucket_policy.json
   tags   = local.default_tags
-  /*
+
   server_side_encryption_configuration {
     rule {
       apply_server_side_encryption_by_default {
@@ -11,7 +11,6 @@ resource "aws_s3_bucket" "textract_source_bucket" {
       }
     }
   }
-  */
 }
 
 resource "aws_s3_bucket_notification" "bucket_notification" {

@@ -1,13 +1,11 @@
-# TODO: add sqs policies
 resource "aws_sqs_queue" "textract_processor_dead_letter" {
   name_prefix = "${var.textract_processor_sqs_name_prefix}-dead-letter-"
   tags        = local.default_tags
 }
 
 resource "aws_sqs_queue" "textract_processor_queue" {
-  name = local.processor_sqs_name
-  # kms_master_key_id                 = aws_kms_key.textract_kms_key.key_id
-  # kms_data_key_reuse_period_seconds = 300
+  name                      = local.processor_sqs_name
+  kms_master_key_id         = aws_kms_key.textract_sqs.key_id
   delay_seconds             = 90
   max_message_size          = 2048
   message_retention_seconds = 86400
@@ -29,24 +27,19 @@ data "aws_iam_policy_document" "sqs_async_processor_policy" {
     sid    = "SQSFromS3Access"
     effect = "Allow"
     actions = [
-      "sqs:SendMessage",
+      "SQS:SendMessage",
     ]
     resources = [
       aws_sqs_queue.textract_processor_queue.arn
     ]
     principals {
-      identifiers = ["*"]
-      type        = "AWS"
+      identifiers = ["s3.amazonaws.com"]
+      type        = "Service"
     }
     condition {
       test     = "ArnEquals"
       values   = ["arn:aws:s3:*:*:${aws_s3_bucket.textract_source_bucket.bucket}"]
       variable = "aws:SourceArn"
-    }
-    condition {
-      test     = "StringEquals"
-      values   = [data.aws_caller_identity.current.account_id]
-      variable = "aws:SourceAccount"
     }
   }
 }
@@ -57,9 +50,8 @@ resource "aws_sqs_queue_policy" "from_s3" {
 }
 
 resource "aws_sqs_queue" "textract_results_queue" {
-  name = local.results_sqs_name
-  # kms_master_key_id                 = aws_kms_key.textract_kms_key.key_id
-  # kms_data_key_reuse_period_seconds = 300
+  name                       = local.results_sqs_name
+  kms_master_key_id          = aws_kms_key.textract_sqs.key_id
   delay_seconds              = 90
   visibility_timeout_seconds = 300
   max_message_size           = 2048
@@ -78,7 +70,7 @@ data "aws_iam_policy_document" "sqs_results_policy" {
     sid    = "SQSFromSNSAccess"
     effect = "Allow"
     actions = [
-      "sqs:SendMessage",
+      "SQS:SendMessage",
     ]
     resources = [
       aws_sqs_queue.textract_results_queue.arn

@@ -926,7 +926,7 @@ class Page:
 
 class Document:
     """
-
+    Document class
     """
 
     def __init__(self, responsePages):

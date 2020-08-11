@@ -7,7 +7,7 @@ variable "textract_destination_bucket_prefix" {
 }
 
 variable "textract_results_sns_name_prefix" {
-  default = "textract-results"
+  default = "textract-results-"
 }
 
 variable "textract_processor_sqs_name_prefix" {

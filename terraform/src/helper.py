@@ -163,9 +163,7 @@ class S3Helper:
         """
         s3 = AwsHelper().get_resource('s3', aws_region)
         s3_object = s3.Object(bucket_name, s3_file_name)
-        s3_object.put(Body=content)
-        # ServerSideEncryption='aws:kms',
-        # SSEKMSKeyId='arn:aws:kms:us-east-1:548193017565:key/e6387d1f-543d-4d02-8841-6d5a71d86410'
+        s3_object.put(Body=content, ServerSideEncryption='aws:kms', SSEKMSKeyId=os.getenv('S3_KMS_KEY'))
 
     @staticmethod
     def read_from_s3(bucket_name, s3_file_name, aws_region=None):

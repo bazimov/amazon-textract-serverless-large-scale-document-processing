@@ -89,7 +89,7 @@ resource "aws_lambda_function" "textract_results_lambda" {
 
   environment {
     variables = {
-      S3_KMS_KEY    = aws_kms_key.textract_s3_key.arn
+      S3_KMS_KEY = aws_kms_key.textract_s3_key.arn
     }
   }
   tags = local.default_tags
@@ -106,14 +106,14 @@ resource "aws_lambda_event_source_mapping" "textract_processor_lambda_event" {
 }
 */
 
-resource "aws_cloudwatch_event_rule" "every_one_minute" {
-  name                = "every-one-minute"
-  description         = "Fires every one minutes"
-  schedule_expression = "rate(1 minute)"
+resource "aws_cloudwatch_event_rule" "every_two_minute" {
+  name                = "every-two-minutes"
+  description         = "Fires every two minutes"
+  schedule_expression = "rate(2 minutes)"
 }
 
 resource "aws_cloudwatch_event_target" "check_foo_every_one_minute" {
-  rule      = aws_cloudwatch_event_rule.every_one_minute.name
+  rule      = aws_cloudwatch_event_rule.every_two_minute.name
   target_id = "lambda"
   arn       = aws_lambda_function.textract_processor_lambda.arn
 }
@@ -123,5 +123,5 @@ resource "aws_lambda_permission" "allow_cloudwatch_to_call_check_foo" {
   action        = "lambda:InvokeFunction"
   function_name = aws_lambda_function.textract_processor_lambda.arn
   principal     = "events.amazonaws.com"
-  source_arn    = aws_cloudwatch_event_rule.every_one_minute.arn
+  source_arn    = aws_cloudwatch_event_rule.every_two_minute.arn
 }

@@ -21,19 +21,18 @@ class OutputGenerator:
 
         self.document = Document(self.response)
 
-    def _output_text(self, page, p):
+    def _output_text(self, page, page_number):
         text = page.text
-        opath = "{}page-{}-text.txt".format(self.output_path, p)
+        opath = "{}page-{}-text.txt".format(self.output_path, page_number)
         S3Helper.write_to_s3(text, self.bucket_name, opath)
         # self.saveItem(self.documentId, "page-{}-Text".format(p), opath)
 
         text_in_reading_order = page.getTextInReadingOrder()
-        opath = "{}page-{}-text-inreadingorder.txt".format(self.output_path, p)
+        opath = "{}page-{}-text-inreadingorder.txt".format(self.output_path, page_number)
         S3Helper.write_to_s3(text_in_reading_order, self.bucket_name, opath)
-        # self.saveItem(self.documentId, "page-{}-TextInReadingOrder".format(p),
-        #              opath)
+        # self.saveItem(self.documentId, "page-{}-TextInReadingOrder".format(p), opath)
 
-    def _output_form(self, page, p):
+    def _output_form(self, page, page_number):
         csv_data = []
         for field in page.form.fields:
             csv_item = []
@@ -47,11 +46,11 @@ class OutputGenerator:
                 csv_item.append("")
             csv_data.append(csv_item)
         csv_field_names = ['Key', 'Value']
-        opath = "{}page-{}-forms.csv".format(self.output_path, p)
+        opath = "{}page-{}-forms.csv".format(self.output_path, page_number)
         S3Helper.write_csv(csv_field_names, csv_data, self.bucket_name, opath)
         # self.saveItem(self.documentId, "page-{}-Forms".format(p), opath)
 
-    def _output_table(self, page, p):
+    def _output_table(self, page, page_number):
 
         csv_data = []
         for table in page.tables:
@@ -65,7 +64,7 @@ class OutputGenerator:
             csv_data.append([])
             csv_data.append([])
 
-        opath = "{}page-{}-tables.csv".format(self.output_path, p)
+        opath = "{}page-{}-tables.csv".format(self.output_path, page_number)
         S3Helper.write_csv_raw(csv_data, self.bucket_name, opath)
         # self.saveItem(self.documentId, "page-{}-Tables".format(p), opath)
 
@@ -83,23 +82,27 @@ class OutputGenerator:
 
         print("Total Pages in Document: {}".format(len(self.document.pages)))
 
+        """
+        # Following block will put document in pages. Commenting out for now.
         doc_text = ""
 
-        p = 1
+        page_number = 1
         for page in self.document.pages:
 
-            output_path = "{}page-{}-response.json".format(self.output_path, p)
+            output_path = "{}page-{}-response.json".format(self.output_path, page_number)
             S3Helper.write_to_s3(json.dumps(page.blocks), self.bucket_name, output_path)
             # self.saveItem(self.documentId, "page-{}-Response".format(p), opath)
 
-            self._output_text(page, p)
+            self._output_text(page, page_number)
 
             doc_text = doc_text + page.text + "\n"
 
             if self.forms:
-                self._output_form(page, p)
+                self._output_form(page, page_number)
 
             if self.tables:
-                self._output_table(page, p)
+                self._output_table(page, page_number)
 
-            p += 1
+            page_number += 1
+            
+        """
