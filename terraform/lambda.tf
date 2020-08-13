@@ -57,15 +57,16 @@ resource "aws_lambda_layer_version" "lambda_layer" {
 }
 
 resource "aws_lambda_function" "textract_processor_lambda" {
-  function_name    = "textract-processor-function"
+  function_name    = var.processor_lambda_name
   layers           = [aws_lambda_layer_version.lambda_layer.arn]
   role             = aws_iam_role.iam_for_lambda_textract_processor.arn
   handler          = "asyncprocess.lambda_handler"
   filename         = data.archive_file.textract_processor_lambda_src.output_path
   source_code_hash = data.archive_file.textract_processor_lambda_src.output_base64sha256
   timeout          = 120
+  memory_size      = 512
+  runtime          = "python3.8"
 
-  runtime = "python3.8"
   environment {
     variables = {
       SNS_ROLE_ARN    = aws_iam_role.iam_for_textract_results_publisher.arn
@@ -73,18 +74,19 @@ resource "aws_lambda_function" "textract_processor_lambda" {
       ASYNC_QUEUE_URL = aws_sqs_queue.textract_processor_queue.id
     }
   }
-
+  # depends_on = [aws_cloudwatch_log_group.processor_lambda_log_group]
   tags = local.default_tags
 }
 
 resource "aws_lambda_function" "textract_results_lambda" {
-  function_name    = "textract-results-function"
+  function_name    = var.results_lambda_name
   layers           = [aws_lambda_layer_version.lambda_layer.arn]
   role             = aws_iam_role.iam_for_lambda_textract_processor.arn
   handler          = "jobresultsprocess.lambda_handler"
   filename         = data.archive_file.textract_results_lambda_src.output_path
   source_code_hash = data.archive_file.textract_results_lambda_src.output_base64sha256
-  timeout          = 120
+  timeout          = 900
+  memory_size      = 3008 # TODO max memory specified may need to change.
   runtime          = "python3.8"
 
   environment {
@@ -92,6 +94,7 @@ resource "aws_lambda_function" "textract_results_lambda" {
       S3_KMS_KEY = aws_kms_key.textract_s3_key.arn
     }
   }
+  # depends_on = [aws_cloudwatch_log_group.processor_lambda_log_group]
   tags = local.default_tags
 }
 resource "aws_lambda_event_source_mapping" "textract_results_lambda_event" {
@@ -125,3 +128,19 @@ resource "aws_lambda_permission" "allow_cloudwatch_to_call_check_foo" {
   principal     = "events.amazonaws.com"
   source_arn    = aws_cloudwatch_event_rule.every_two_minute.arn
 }
+
+/*
+resource "aws_cloudwatch_log_group" "processor_lambda_log_group" {
+  name       = "/aws/lambda/${var.processor_lambda_name}"
+  kms_key_id = aws_kms_key.textract_cw_key.arn
+  # retention_in_days = 14
+  tags = local.default_tags
+}
+
+resource "aws_cloudwatch_log_group" "results_lambda_log_group" {
+  name       = "/aws/lambda/${var.results_lambda_name}"
+  kms_key_id = aws_kms_key.textract_cw_key.arn
+  # retention_in_days = 14
+  tags = local.default_tags
+}
+*/

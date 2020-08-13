@@ -173,8 +173,37 @@ data "aws_iam_policy_document" "s3_key_policy" {
   }
 }
 
+data "aws_iam_policy_document" "cloudwatch_logs_key_policy" {
+  source_json = data.aws_iam_policy_document.kms_shared_policy.json
+
+  statement {
+    sid    = "LogsAllowDefault"
+    effect = "Allow"
+    actions = [
+      "kms:Encrypt*",
+      "kms:Decrypt*",
+      "kms:ReEncrypt*",
+      "kms:GenerateDataKey*",
+      "kms:Describe*",
+    ]
+    resources = ["*"]
+    principals {
+      identifiers = ["logs.${data.aws_region.current.name}.amazonaws.com"]
+      type        = "Service"
+    }
+    condition {
+      test = "ArnEquals"
+      values = [
+        "arn:aws:logs:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:log-group:/aws/lambda/${var.processor_lambda_name}:*",
+        "arn:aws:logs:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:log-group:/aws/lambda/${var.results_lambda_name}:*",
+      ]
+      variable = "kms:EncryptionContext:aws:logs:arn"
+    }
+  }
+}
+
 resource "aws_kms_key" "textract_sqs" {
-  description             = "This key is used to encrypt data of textract pipeline services"
+  description             = "This key is used to encrypt data of textract sqs pipeline services"
   policy                  = data.aws_iam_policy_document.sqs_key_policy.json
   deletion_window_in_days = 30
   tags                    = local.default_tags
@@ -186,7 +215,7 @@ resource "aws_kms_alias" "textract_sqs_alias" {
 }
 
 resource "aws_kms_key" "textract_sns_key" {
-  description             = "This key is used to encrypt data of textract pipeline services"
+  description             = "This key is used to encrypt data of textract sns pipeline services"
   policy                  = data.aws_iam_policy_document.sns_key_policy.json
   deletion_window_in_days = 30
   tags                    = local.default_tags
@@ -198,7 +227,7 @@ resource "aws_kms_alias" "textract_sns_alias" {
 }
 
 resource "aws_kms_key" "textract_s3_key" {
-  description             = "This key is used to encrypt data of textract pipeline services"
+  description             = "This key is used to encrypt data of textract s3 pipeline services"
   policy                  = data.aws_iam_policy_document.s3_key_policy.json
   deletion_window_in_days = 30
   tags                    = local.default_tags
@@ -207,4 +236,16 @@ resource "aws_kms_key" "textract_s3_key" {
 resource "aws_kms_alias" "textract_s3_alias" {
   name_prefix   = "alias/textract-pipeline-s3-"
   target_key_id = aws_kms_key.textract_s3_key.key_id
+}
+
+resource "aws_kms_key" "textract_cw_key" {
+  description             = "This key is used to encrypt data of textract cloudwatch pipeline services"
+  policy                  = data.aws_iam_policy_document.cloudwatch_logs_key_policy.json
+  deletion_window_in_days = 30
+  tags                    = local.default_tags
+}
+
+resource "aws_kms_alias" "textract_cw_alias" {
+  name_prefix   = "alias/textract-pipeline-logs-"
+  target_key_id = aws_kms_key.textract_cw_key.key_id
 }

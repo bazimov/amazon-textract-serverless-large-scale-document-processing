@@ -32,4 +32,3 @@ resource "aws_iam_role" "kms_key_admin_role" {
   assume_role_policy = data.aws_iam_policy_document.kms_key_admin_assume_policy.json
   tags               = local.default_tags
 }
-

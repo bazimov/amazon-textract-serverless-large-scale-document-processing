@@ -82,8 +82,6 @@ class OutputGenerator:
 
         print("Total Pages in Document: {}".format(len(self.document.pages)))
 
-        """
-        # Following block will put document in pages. Commenting out for now.
         doc_text = ""
 
         page_number = 1
@@ -104,5 +102,3 @@ class OutputGenerator:
                 self._output_table(page, page_number)
 
             page_number += 1
-            
-        """

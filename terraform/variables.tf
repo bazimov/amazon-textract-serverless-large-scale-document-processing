@@ -25,3 +25,12 @@ variable "lambda_role_name" {
 variable "textract_results_role_name" {
   default = "textract-results-publisher-role"
 }
+
+variable "processor_lambda_name" {
+  default = "textract-processor-function"
+}
+
+variable "results_lambda_name" {
+  default = "textract-results-function"
+}
+
