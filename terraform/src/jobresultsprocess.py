@@ -14,7 +14,7 @@ def get_job_results(api, job_id):
     Get job results from textract.
     """
     pages = []
-
+    # TODO: change hardcoded number to random 1-10.
     time.sleep(5)
 
     client = AwsHelper().get_client('textract')
