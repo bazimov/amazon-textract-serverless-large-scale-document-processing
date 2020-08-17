@@ -63,7 +63,7 @@ resource "aws_lambda_function" "textract_processor_lambda" {
   handler          = "asyncprocess.lambda_handler"
   filename         = data.archive_file.textract_processor_lambda_src.output_path
   source_code_hash = data.archive_file.textract_processor_lambda_src.output_base64sha256
-  timeout          = 120
+  timeout          = var.timeout_value
   memory_size      = 512
   runtime          = "python3.8"
 
@@ -85,7 +85,7 @@ resource "aws_lambda_function" "textract_results_lambda" {
   handler          = "jobresultsprocess.lambda_handler"
   filename         = data.archive_file.textract_results_lambda_src.output_path
   source_code_hash = data.archive_file.textract_results_lambda_src.output_base64sha256
-  timeout          = 900
+  timeout          = var.timeout_value
   memory_size      = 3008 # TODO max memory specified may need to change.
   runtime          = "python3.8"
 
@@ -116,7 +116,7 @@ resource "aws_lambda_function" "comprehend_processor" {
   handler          = "comprehendprocess.lambda_handler"
   filename         = data.archive_file.comprehend_processor_lambda_src.output_path
   source_code_hash = data.archive_file.comprehend_processor_lambda_src.output_base64sha256
-  timeout          = 900
+  timeout          = var.timeout_value
   memory_size      = 3008 # TODO max memory specified may need to change.
   runtime          = "python3.8"
 

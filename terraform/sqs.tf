@@ -4,12 +4,13 @@ resource "aws_sqs_queue" "textract_processor_dead_letter" {
 }
 
 resource "aws_sqs_queue" "textract_processor_queue" {
-  name                      = local.processor_sqs_name
-  kms_master_key_id         = aws_kms_key.textract_sqs.key_id
-  delay_seconds             = 90
-  max_message_size          = 2048
-  message_retention_seconds = 86400
-  receive_wait_time_seconds = 10
+  name                       = local.processor_sqs_name
+  kms_master_key_id          = aws_kms_key.textract_sqs.key_id
+  delay_seconds              = 90
+  visibility_timeout_seconds = var.timeout_value
+  max_message_size           = 2048
+  message_retention_seconds  = 86400
+  receive_wait_time_seconds  = 10
   redrive_policy = jsonencode({
     deadLetterTargetArn = aws_sqs_queue.textract_processor_dead_letter.arn
     maxReceiveCount     = 4
@@ -53,7 +54,7 @@ resource "aws_sqs_queue" "textract_results_queue" {
   name                       = local.results_sqs_name
   kms_master_key_id          = aws_kms_key.textract_sqs.key_id
   delay_seconds              = 90
-  visibility_timeout_seconds = 300
+  visibility_timeout_seconds = var.timeout_value
   max_message_size           = 2048
   message_retention_seconds  = 86400
   receive_wait_time_seconds  = 10

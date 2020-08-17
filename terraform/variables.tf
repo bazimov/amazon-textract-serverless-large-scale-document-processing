@@ -37,3 +37,7 @@ variable "results_lambda_name" {
 variable "comprehend_lambda_name" {
   default = "comprehend-processor-function"
 }
+
+variable "timeout_value" {
+  default = 900
+}
