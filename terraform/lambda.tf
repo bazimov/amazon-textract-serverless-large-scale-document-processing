@@ -163,7 +163,6 @@ resource "aws_lambda_permission" "allow_cloudwatch_to_call_check_foo" {
   function_name  = aws_lambda_function.textract_processor_lambda.arn
   principal      = "events.amazonaws.com"
   source_arn     = aws_cloudwatch_event_rule.every_two_minute.arn
-  source_account = data.aws_caller_identity.current.account_id
 }
 
 /*
