@@ -2,7 +2,6 @@ class BoundingBox:
     """
 
     """
-
     def __init__(self, width, height, left, top):
         self._width = width
         self._height = height
@@ -49,7 +48,6 @@ class Polygon:
     """
 
     """
-
     def __init__(self, x, y):
         self._x = x
         self._y = y
@@ -78,7 +76,6 @@ class Geometry:
     """
 
     """
-
     def __init__(self, geometry):
         boundingBox = geometry["BoundingBox"]
         polygon = geometry["Polygon"]
@@ -115,7 +112,6 @@ class Word:
     """
 
     """
-
     def __init__(self, block, blockMap):
         self._block = block
         self._confidence = block['Confidence']
@@ -173,7 +169,6 @@ class Line:
     """
 
     """
-
     def __init__(self, block, blockMap):
 
         self._block = block
@@ -254,7 +249,6 @@ class SelectionElement:
     """
 
     """
-
     def __init__(self, block, blockMap):
         self._confidence = block['Confidence']
         self._geometry = Geometry(block['Geometry'])
@@ -298,7 +292,6 @@ class FieldKey:
     """
 
     """
-
     def __init__(self, block, children, blockMap):
         self._block = block
         self._confidence = block['Confidence']
@@ -375,7 +368,6 @@ class FieldValue:
     """
 
     """
-
     def __init__(self, block, children, blockMap):
         self._block = block
         self._confidence = block['Confidence']
@@ -456,7 +448,6 @@ class Field:
     """
 
     """
-
     def __init__(self, block, blockMap):
         self._key = None
         self._value = None
@@ -505,7 +496,6 @@ class Form:
     """
 
     """
-
     def __init__(self):
         self._fields = []
         self._fieldsMap = {}
@@ -561,7 +551,6 @@ class Cell:
     """
 
     """
-
     def __init__(self, block, blockMap):
         self._block = block
         self._confidence = block['Confidence']
@@ -675,7 +664,6 @@ class Row:
     """
 
     """
-
     def __init__(self):
         self._cells = []
 
@@ -698,7 +686,6 @@ class Table:
     """
 
     """
-
     def __init__(self, block, blockMap):
 
         self._block = block
@@ -777,7 +764,6 @@ class Page:
     """
 
     """
-
     def __init__(self, blocks, blockMap):
         self._blocks = blocks
         self._text = ""
@@ -928,7 +914,6 @@ class Document:
     """
     Document class
     """
-
     def __init__(self, responsePages):
 
         if not isinstance(responsePages, list):

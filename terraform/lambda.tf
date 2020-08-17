@@ -97,9 +97,45 @@ resource "aws_lambda_function" "textract_results_lambda" {
   # depends_on = [aws_cloudwatch_log_group.processor_lambda_log_group]
   tags = local.default_tags
 }
+
 resource "aws_lambda_event_source_mapping" "textract_results_lambda_event" {
   event_source_arn = aws_sqs_queue.textract_results_queue.arn
   function_name    = aws_lambda_function.textract_results_lambda.arn
+}
+
+data "archive_file" "comprehend_processor_lambda_src" {
+  source_file = "${path.module}/src/comprehendprocess.py"
+  output_path = "/tmp/comprehend_process_payload.zip"
+  type        = "zip"
+}
+
+resource "aws_lambda_function" "comprehend_processor" {
+  function_name    = var.comprehend_lambda_name
+  layers           = [aws_lambda_layer_version.lambda_layer.arn]
+  role             = aws_iam_role.iam_for_lambda_textract_processor.arn
+  handler          = "comprehendprocess.lambda_handler"
+  filename         = data.archive_file.comprehend_processor_lambda_src.output_path
+  source_code_hash = data.archive_file.comprehend_processor_lambda_src.output_base64sha256
+  timeout          = 900
+  memory_size      = 3008 # TODO max memory specified may need to change.
+  runtime          = "python3.8"
+
+  environment {
+    variables = {
+      S3_KMS_KEY = aws_kms_key.textract_s3_key.arn
+    }
+  }
+  # depends_on = [aws_cloudwatch_log_group.processor_lambda_log_group]
+  tags = local.default_tags
+}
+
+resource "aws_lambda_permission" "allow_bucket" {
+  statement_id   = "AllowExecutionFromS3Bucket"
+  action         = "lambda:InvokeFunction"
+  function_name  = aws_lambda_function.comprehend_processor.arn
+  principal      = "s3.amazonaws.com"
+  source_arn     = aws_s3_bucket.textract_source_bucket.arn
+  source_account = data.aws_caller_identity.current.account_id
 }
 
 /* this sqs source also works but might overflow the lambda, using cron every minute
@@ -122,11 +158,12 @@ resource "aws_cloudwatch_event_target" "check_foo_every_one_minute" {
 }
 
 resource "aws_lambda_permission" "allow_cloudwatch_to_call_check_foo" {
-  statement_id  = "AllowExecutionFromCloudWatch"
-  action        = "lambda:InvokeFunction"
-  function_name = aws_lambda_function.textract_processor_lambda.arn
-  principal     = "events.amazonaws.com"
-  source_arn    = aws_cloudwatch_event_rule.every_two_minute.arn
+  statement_id   = "AllowExecutionFromCloudWatch"
+  action         = "lambda:InvokeFunction"
+  function_name  = aws_lambda_function.textract_processor_lambda.arn
+  principal      = "events.amazonaws.com"
+  source_arn     = aws_cloudwatch_event_rule.every_two_minute.arn
+  source_account = data.aws_caller_identity.current.account_id
 }
 
 /*

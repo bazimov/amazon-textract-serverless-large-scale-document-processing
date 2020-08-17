@@ -8,7 +8,6 @@ class OutputGenerator:
     """
     Output generator
     """
-
     def __init__(self, document_id, response, bucket_name, object_name, forms, tables, ddb=None):
         self.document_id = document_id
         self.response = response

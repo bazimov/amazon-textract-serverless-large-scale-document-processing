@@ -10,7 +10,6 @@ class DocumentStore:
     """
     Document Store
     """
-
     def __init__(self, documentsTableName, outputTableName):
         self._documentsTableName = documentsTableName
         self._outputTableName = outputTableName
@@ -89,14 +88,14 @@ class DocumentStore:
 
         try:
             table.update_item(
-                Key={
-                    'documentId': documentId},
-                UpdateExpression='SET documentStatus= :documentstatusValue, documentCompletedOn = :documentCompletedOnValue',
+                Key={'documentId': documentId},
+                UpdateExpression=
+                'SET documentStatus= :documentstatusValue, documentCompletedOn = :documentCompletedOnValue',
                 ConditionExpression='attribute_exists(documentId)',
                 ExpressionAttributeValues={
                     ':documentstatusValue': "SUCCEEDED",
-                    ':documentCompletedOnValue': str(
-                        datetime.datetime.utcnow())})
+                    ':documentCompletedOnValue': str(datetime.datetime.utcnow())
+                })
         except ClientError as e:
             if e.response['Error']['Code'] == "ConditionalCheckFailedException":
                 print(e.response['Error']['Message'])
@@ -117,7 +116,7 @@ class DocumentStore:
         ddbGetItemResponse = dynamodb.get_item(Key={'documentId': {
             'S': documentId
         }},
-            TableName=self._documentsTableName)
+                                               TableName=self._documentsTableName)
 
         itemToReturn = None
 

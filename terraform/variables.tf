@@ -34,3 +34,6 @@ variable "results_lambda_name" {
   default = "textract-results-function"
 }
 
+variable "comprehend_lambda_name" {
+  default = "comprehend-processor-function"
+}

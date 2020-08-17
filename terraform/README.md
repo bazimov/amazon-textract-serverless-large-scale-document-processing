@@ -11,6 +11,9 @@ TODO: There are multiple todo items here, I will be working on them next. Just w
 How to install the infrastructure via terraform
 
 ####Initialize
+Assumes you have default credentials in default location.
+If you store credentials in custom location change the path below.
+If you have custom profile add extra argument `-e AWS_PROFILE=custom`.
 ```shell script
 cd terraform/
 docker run --rm -it \

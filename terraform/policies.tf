@@ -137,6 +137,16 @@ data "aws_iam_policy_document" "lambda_shared_policy" {
       "${aws_s3_bucket.textract_source_bucket.arn}/*",
     ]
   }
+
+  statement {
+    sid    = "ComprehendAccess"
+    effect = "Allow"
+    actions = [
+      "comprehend:DetectEntities",
+      "comprehend:DetectKeyPhrases",
+    ]
+    resources = ["*"]
+  }
 }
 
 
