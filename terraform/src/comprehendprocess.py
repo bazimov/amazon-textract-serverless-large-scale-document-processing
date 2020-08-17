@@ -31,24 +31,32 @@ def lambda_handler(event, context):
 
     logging.info("Starting detect_key_phrases job.")
     keyphrase_response = comprehend.detect_key_phrases(Text=text_file_str, LanguageCode='en')
+    logging.debug("Detect key phrases response: %s", keyphrase_response)
     key_phrase_list = keyphrase_response.get("KeyPhrases")
     for key in key_phrase_list:
         text_values.append(key.get("Text"))
 
+    logging.debug("Text values: %s", text_values)
+    keyphrases_object = "{}.{}".format(object_name, ".keyPhrasesComprehend.json")
     S3Helper.write_to_s3(
         content=json.dumps(text_values),
         bucket_name=bucket_name,
-        s3_file_name="{}.{}".format(object_name, ".keyPhrasesComprehend.json"),
+        s3_file_name=keyphrases_object,
     )
-
+    logging.info("Sent the result to s3 bucket %s as object %s", bucket_name, keyphrases_object)
     logging.info("Starting detect_entities job.")
+
     detect_entity = comprehend.detect_entities(Text=text_file_str, LanguageCode='en')
+    logging.debug("Detect entities response: %s", detect_entity)
     entity_list = detect_entity.get("Entities")
     for key in entity_list:
         text_values_entity.update([(key.get("Type").strip('\t\n\r'), key.get("Text").strip('\t\n\r'))])
 
+    logging.debug("Text values entity: %s", text_values_entity)
+    entity_object = "{}.{}".format(object_name, ".entitiesComprehend.json")
     S3Helper.write_to_s3(
         content=json.dumps(text_values_entity),
         bucket_name=bucket_name,
-        s3_file_name="{}.{}".format(object_name, ".entitiesComprehend.json"),
+        s3_file_name=entity_object,
     )
+    logging.info("Sent the result to s3 bucket %s as object %s", bucket_name, entity_object)
