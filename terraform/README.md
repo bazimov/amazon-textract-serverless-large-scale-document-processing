@@ -47,3 +47,19 @@ docker run --rm -it \
   -v $HOME/.aws/credentials:/root/.aws/credentials \
   hashicorp/terraform:0.13.0 destroy
 ```
+
+### How to use/test this infrastructure?
+1. Code creates one bucket with prefix `s3://textract-source-bucket`. You can upload the sample_f1040.pdf file or any
+PDF file you have to the bucket.
+    ```shell script
+    aws s3 cp sample_f1040.pdf s3://<bucket_name_here/>
+    ```
+2. PDF file will be sent to SQS queue and Lambda will pick it up to process with the Textract. Results will be sent back to
+s3 bucket with prefix of <file_name-analysis>. There will be raw response.json response and per page filtered responses 
+such as csv, txt, json files.
+4. 1st text page of the document will kick off Comprehend job to further analyze the text document.
+Results will be delivered as a file with extensions that include "Comprehend" phrase in them.
+5. You can see the files within the UI or with listing the bucket.
+    ```shell script
+    aws s3 ls s3://<bucket_name>
+    ```

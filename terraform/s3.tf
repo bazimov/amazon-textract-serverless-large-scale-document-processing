@@ -34,3 +34,6 @@ resource "aws_s3_bucket_notification" "bucket_notification" {
   }
 }
 
+output "s3_bucket_name" {
+  value = aws_s3_bucket.textract_source_bucket.bucket
+}

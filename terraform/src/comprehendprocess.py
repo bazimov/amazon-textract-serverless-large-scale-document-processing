@@ -37,7 +37,7 @@ def lambda_handler(event, context):
         text_values.append(key.get("Text"))
 
     logging.debug("Text values: %s", text_values)
-    keyphrases_object = "{}.{}".format(object_name, ".keyPhrasesComprehend.json")
+    keyphrases_object = "{}{}".format(object_name, ".keyPhrasesComprehend.json")
     S3Helper.write_to_s3(
         content=json.dumps(text_values),
         bucket_name=bucket_name,
@@ -53,7 +53,7 @@ def lambda_handler(event, context):
         text_values_entity.update([(key.get("Type").strip('\t\n\r'), key.get("Text").strip('\t\n\r'))])
 
     logging.debug("Text values entity: %s", text_values_entity)
-    entity_object = "{}.{}".format(object_name, ".entitiesComprehend.json")
+    entity_object = "{}{}".format(object_name, ".entitiesComprehend.json")
     S3Helper.write_to_s3(
         content=json.dumps(text_values_entity),
         bucket_name=bucket_name,
