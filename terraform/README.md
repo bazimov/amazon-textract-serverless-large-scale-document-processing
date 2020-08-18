@@ -10,7 +10,7 @@ TODO: There are multiple todo items here, I will be working on them next. Just w
 (These instructions assume you run MAC OS)
 How to install the infrastructure via terraform
 
-####Initialize
+### Initialize
 Assumes you have default credentials in default location.
 If you store credentials in custom location change the path below.
 If you have custom profile add extra argument `-e AWS_PROFILE=custom`.
@@ -22,7 +22,7 @@ docker run --rm -it \
   -v $HOME/.aws/credentials:/root/.aws/credentials \
   hashicorp/terraform:0.13.0 init
 ```
-####Plan
+### Plan
 ```shell script
 docker run --rm -it \
   -v $PWD:/opt \
@@ -30,11 +30,20 @@ docker run --rm -it \
   -v $HOME/.aws/credentials:/root/.aws/credentials \
   hashicorp/terraform:0.13.0 plan
 ```
-####Apply
+### Apply
 ```shell script
 docker run --rm -it \
   -v $PWD:/opt \
   -w /opt \
   -v $HOME/.aws/credentials:/root/.aws/credentials \
   hashicorp/terraform:0.13.0 apply
+```
+
+### Cleanup / Destroy
+```shell script
+docker run --rm -it \
+  -v $PWD:/opt \
+  -w /opt \
+  -v $HOME/.aws/credentials:/root/.aws/credentials \
+  hashicorp/terraform:0.13.0 destroy
 ```
