@@ -249,3 +249,7 @@ resource "aws_kms_alias" "textract_cw_alias" {
   name_prefix   = "alias/textract-pipeline-logs-"
   target_key_id = aws_kms_key.textract_cw_key.key_id
 }
+
+output "s3_kms_key_arn" {
+  value = aws_kms_key.textract_s3_key.arn
+}

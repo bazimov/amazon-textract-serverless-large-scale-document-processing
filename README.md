@@ -1,3 +1,6 @@
+# Navigate to terraform directory for terraform infrastructure
+
+### Below is default readme.
 # Large scale document processing with Amazon Textract
 
 This reference architecture shows how you can extract text and data from documents at scale using Amazon Textract. Below are some of key attributes of reference architecture:
